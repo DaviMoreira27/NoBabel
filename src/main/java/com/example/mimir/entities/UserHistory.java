@@ -28,7 +28,7 @@ public class UserHistory {
     @Column (nullable = false, name = "successes_numbers")
     private Integer successesNumbers;
 
-//    @Column (nullable = false, name = "task_payload", columnDefinition = "JSON")
-//    @Type("json")
-//    private Task taskPayload;
+    @Column (nullable = false, name = "task_payload", columnDefinition = "jsonb")
+    @Convert(converter = Task.TaskJsonConverter.class)
+    private Task taskPayload;
 }
