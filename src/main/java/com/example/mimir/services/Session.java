@@ -1,6 +1,6 @@
 package com.example.mimir.services;
 
-import com.example.mimir.exceptions.http.client.SessionExpiredException;
+import com.example.mimir.exceptions.session.SessionExpiredException;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSession;
 
