@@ -17,11 +17,11 @@ public class TestController {
     @GetMapping("/test")
     @Operation(summary = "Get Test String", description = "Retorna uma string simples de teste.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Requisição bem-sucedida"),
+            @ApiResponse(responseCode = "201", description = "Requisição bem-sucedida"),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public String test() {
-        return "test";
+        return "test!!!!!!!";
     }
 
     @PostMapping("/create")

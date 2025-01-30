@@ -1,9 +1,10 @@
 package com.example.mimir.exceptions.session;
 
 import com.example.mimir.exceptions.HttpClientException;
+import org.springframework.http.HttpStatus;
 
-abstract class SessionException extends HttpClientException {
-    public static final int DEFAULT_HTTP_STATUS = 403;
+public abstract class SessionException extends HttpClientException {
+    public static final HttpStatus DEFAULT_HTTP_STATUS = HttpStatus.FORBIDDEN;
     public static final String DEFAULT_HTTP_PATH = "SESSION_EXCEPTION";
 
     public SessionException(String message, String httpCode) {

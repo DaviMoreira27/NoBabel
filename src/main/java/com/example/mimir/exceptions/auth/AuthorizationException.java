@@ -1,9 +1,10 @@
 package com.example.mimir.exceptions.auth;
 
 import com.example.mimir.exceptions.HttpClientException;
+import org.springframework.http.HttpStatus;
 
-abstract class AuthorizationException extends HttpClientException {
-    public static final int DEFAULT_HTTP_STATUS = 401;
+public abstract class AuthorizationException extends HttpClientException {
+    public static final HttpStatus DEFAULT_HTTP_STATUS = HttpStatus.UNAUTHORIZED;
     public static final String DEFAULT_HTTP_PATH = "AUTHORIZATION_EXCEPTION";
 
     public AuthorizationException(String message, String httpCode) {

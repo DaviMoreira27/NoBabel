@@ -6,7 +6,7 @@ POSTGRES_PASSWORD="2706"
 POSTGRES_PORT="5431"
 
 # Configurações do Redis
-REDIS_PASSWORD="your_redis_password"
+REDIS_PASSWORD="700*//"
 REDIS_PORT="6379"
 
 # Iniciando o container do Postgres
