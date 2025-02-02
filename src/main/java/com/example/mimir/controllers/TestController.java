@@ -1,7 +1,6 @@
 package com.example.mimir.controllers;
 
 import com.example.mimir.dto.Task;
-import com.example.mimir.exceptions.session.SessionExpiredException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,9 +19,6 @@ public class TestController {
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public String test() {
-        if (true) {
-            throw new SessionExpiredException("Session expired");
-        }
         return "test!!!!!!!";
     }
 

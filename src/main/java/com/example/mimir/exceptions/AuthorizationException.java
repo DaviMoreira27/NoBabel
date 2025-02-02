@@ -1,6 +1,5 @@
-package com.example.mimir.exceptions.auth;
+package com.example.mimir.exceptions;
 
-import com.example.mimir.exceptions.HttpClientException;
 import org.springframework.http.HttpStatus;
 
 public abstract class AuthorizationException extends HttpClientException {

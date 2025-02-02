@@ -3,8 +3,7 @@ package com.example.mimir.services;
 
 import com.example.mimir.dto.SessionData;
 import com.example.mimir.entities.Session;
-import com.example.mimir.exceptions.database.DatabaseConnectionException;
-import com.example.mimir.exceptions.database.UnknownDatabaseException;
+import com.example.mimir.exceptions.DatabaseException;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisException;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,9 +24,9 @@ public class SessionService {
             redisTemplate.opsForSet().add("session:" + sessionId, sessionData);
         } catch (RedisException error) {
             if (error.getCause() instanceof RedisConnectionException) {
-                throw new DatabaseConnectionException("Database connection error");
+                throw new DatabaseException.DatabaseConnectionException("Database connection error");
             }
-            throw new UnknownDatabaseException("Unknown database error");
+            throw new DatabaseException.UnknownDatabaseException("Unknown database error");
         }
     }
 
@@ -36,9 +35,9 @@ public class SessionService {
             return (Session) redisTemplate.opsForValue().get("session:" + sessionId);
         } catch (RedisException error) {
             if (error.getCause() instanceof RedisConnectionException) {
-                throw new DatabaseConnectionException("Database connection error");
+                throw new DatabaseException.DatabaseConnectionException("Database connection error");
             }
-            throw new UnknownDatabaseException("Unknown database error");
+            throw new DatabaseException.UnknownDatabaseException("Unknown database error");
         }
     }
 }
