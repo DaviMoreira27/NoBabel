@@ -2,7 +2,7 @@ package com.example.mimir.exceptions;
 
 import org.springframework.http.HttpStatus;
 
-public abstract class HttpClientException extends AppException {
+public abstract class HttpClientException extends RuntimeException {
     private final HttpStatus httpStatus;
     protected final String httpPath;
 

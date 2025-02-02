@@ -1,6 +1,7 @@
 package com.example.mimir.middlewares;
 
 import com.example.mimir.exceptions.HttpClientException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,37 +21,24 @@ import java.rmi.ServerException;
 @Component
 @Order(-1)
 public class ErrorMiddleware extends OncePerRequestFilter {
-    private final ObjectMapper objectMapper;
+    @Override
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            filterChain.doFilter(request, response);
+        } catch (HttpClientException error) {
 
-    public ErrorMiddleware(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+            Error errorResponse = new Error(error.getStatus(), error.getMessage(), error.getHttpPath());
+
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.getWriter().write(convertObjectToJson(errorResponse));
+        }
     }
 
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain chain) throws IOException {
-        try {
-            chain.doFilter(request, response);
-        } catch (HttpClientException e) {
-            Error error = new Error(e.getStatus(), e.getMessage(), e.getHttpPath());
-
-            response.setStatus(e.getStatus().value());
-            response.setContentType("application/json");
-            response.getWriter().write(objectMapper.writeValueAsString(error));
-        } catch (ServletException e) {
-            if (e.getCause() instanceof HttpClientException clientException) {
-                Error error = new Error(
-                        clientException.getStatus(),
-                        clientException.getMessage(),
-                        clientException.getHttpPath()
-                );
-
-                response.setStatus(clientException.getStatus().value());
-                response.setContentType("application/json");
-                response.getWriter().write(objectMapper.writeValueAsString(error));
-            }
+    public String convertObjectToJson(Object object) throws JsonProcessingException {
+        if (object == null) {
+            return null;
         }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(object);
     }
 }

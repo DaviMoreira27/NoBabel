@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 // @Component annotation adds this middleware for every route
-@Order(1)
+//@Order(0)
 public class SessionMiddleware implements Filter {
 
     private final SessionService sessionService;
@@ -75,7 +75,7 @@ public class SessionMiddleware implements Filter {
 }
 
 
-@Configuration
+//@Configuration
 class FilterConfig {
     private final SessionService sessionService;
 

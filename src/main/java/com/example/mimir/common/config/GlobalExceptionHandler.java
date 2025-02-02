@@ -4,7 +4,11 @@ import com.example.mimir.dto.Error;
 import com.example.mimir.exceptions.HttpClientException;
 import com.example.mimir.exceptions.database.DatabaseConnectionException;
 import com.example.mimir.exceptions.database.DatabaseException;
+import com.example.mimir.exceptions.general.UnknownInternalException;
 import com.example.mimir.exceptions.session.SessionException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,32 +22,50 @@ import java.util.logging.Logger;
 @Order( Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private String jsonConverter (Object bodyResponse) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+        return writer.writeValueAsString(bodyResponse);
+    }
+
+
     @ExceptionHandler({ DatabaseException.class})
-    public ResponseEntity<Object> handleDatabaseExceptions(DatabaseConnectionException exception) {
+    public ResponseEntity<String> handleDatabaseExceptions(DatabaseException exception) throws JsonProcessingException {
+        Error errorBody = new Error(exception.getStatus(), exception.getMessage(),
+                exception.getHttpPath());
+        System.out.println("ERROR BODY DATABASE " + errorBody);
         return ResponseEntity
                 .status(exception.getStatus())
-                .body(new Error(exception.getStatus(), exception.getMessage(), exception.getHttpPath()));
+                .body(this.jsonConverter(errorBody));
     }
 
     @ExceptionHandler({ SessionException.class })
-    public ResponseEntity<Object> handleSessionExceptions(SessionException exception) {
+    public ResponseEntity<String> handleSessionExceptions(SessionException exception) throws JsonProcessingException {
+        Error errorBody = new Error(exception.getStatus(), exception.getMessage(),
+                exception.getHttpPath());
+        System.out.println("ERROR BODY " + errorBody);
         return ResponseEntity
                 .status(exception.getStatus())
-                .body(new Error(exception.getStatus(), exception.getMessage(), exception.getHttpPath()));
+                .body(this.jsonConverter(errorBody));
     }
 
     @ExceptionHandler({ HttpClientException.class })
-    public ResponseEntity<Object> handleHttpClientExceptions(HttpClientException exception) {
+    public ResponseEntity<String> handleHttpClientExceptions(HttpClientException exception) throws JsonProcessingException {
+        Error errorBody = new Error(exception.getStatus(), exception.getMessage(),
+                exception.getHttpPath());
+        System.out.println("ERROR BODY GENERIC" + errorBody);
         return ResponseEntity
                 .status(exception.getStatus())
-                .body(new Error(exception.getStatus(), exception.getMessage(), exception.getHttpPath()));
+                .body(this.jsonConverter(errorBody));
     }
 
     @ExceptionHandler({RuntimeException.class})
-    public ResponseEntity<Object> handleRuntimeException(RuntimeException exception) {
+    public ResponseEntity<String> handleRuntimeException(RuntimeException exception) throws JsonProcessingException {
+        UnknownInternalException errorBody = new UnknownInternalException("Sorry, an internal error " +
+                "has ocurred, please try again later!");
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new Error(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage(),
-                        "GENERAL_INTERNAL_SERVER_ERROR"));
+                .body(this.jsonConverter(errorBody));
     }
 }
