@@ -1,33 +1,28 @@
 package com.example.mimir.middlewares;
 
+import com.example.mimir.common.ErrorHandlingFilters;
 import com.example.mimir.entities.Session;
-import com.example.mimir.exceptions.HttpClientException;
-import com.example.mimir.exceptions.general.UnknownInternalException;
-import com.example.mimir.exceptions.session.InvalidSessionException;
-import com.example.mimir.exceptions.session.SessionException;
-import com.example.mimir.exceptions.session.SessionExpiredException;
+import com.example.mimir.exceptions.SessionException;
 import com.example.mimir.services.SessionService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 // @Component annotation adds this middleware for every route
-//@Order(0)
+@Order(1)
 public class SessionMiddleware implements Filter {
-
     private final SessionService sessionService;
+    private final ErrorHandlingFilters errorHandling;
 
-    SessionMiddleware(SessionService sessionService) {
+    public SessionMiddleware (SessionService sessionService, ErrorHandlingFilters errorHandlingFilters) {
         this.sessionService = sessionService;
+        this.errorHandling = errorHandlingFilters;
     }
 
     @Override
@@ -38,7 +33,7 @@ public class SessionMiddleware implements Filter {
             Cookie[] cookies = httpRequest.getCookies();
             System.out.println("MIDDLEWARE");
             if (cookies == null || cookies.length == 0) {
-                throw new InvalidSessionException("No cookies found");
+                throw new SessionException.InvalidSessionException("No cookies found");
             }
 
             for (Cookie cookie : cookies) {
@@ -49,10 +44,9 @@ public class SessionMiddleware implements Filter {
                     return;
                 }
             }
-            throw new InvalidSessionException("No session ID found");
-        } catch (SessionException e) {
-            HttpServletResponse response = (HttpServletResponse) servletResponse;
-            response.sendError(e.getStatus().value(), e.getMessage());
+            throw new SessionException.InvalidSessionException("No session ID found");
+        } catch (SessionException error) {
+            this.errorHandling.filterError(error, servletResponse);
         }
     }
 
@@ -61,7 +55,7 @@ public class SessionMiddleware implements Filter {
        System.out.println(sessionData);
 
        if (sessionData == null) {
-           throw new InvalidSessionException("No session found");
+           throw new SessionException.InvalidSessionException("No session found");
        }
 
        if (
@@ -69,23 +63,25 @@ public class SessionMiddleware implements Filter {
                sessionData.getSessionData().expirationTime() >= System.currentTimeMillis() ||
                sessionData.getSessionData().sessionMaxIdleTime() >= sessionData.getSessionData().lastRequestTime()
        ) {
-           throw new SessionExpiredException("Session already expired");
+           throw new SessionException.SessionExpiredException("Session already expired");
        }
     }
 }
 
 
-//@Configuration
+@Configuration
 class FilterConfig {
     private final SessionService sessionService;
+    private final ErrorHandlingFilters errorHandling;
 
-    public FilterConfig(SessionService sessionService) {
+    public FilterConfig(SessionService sessionService, ErrorHandlingFilters errorHandling) {
         this.sessionService = sessionService;
+        this.errorHandling = errorHandling;
     }
 
     @Bean
     public SessionMiddleware sessionMiddleware() {
-        return new SessionMiddleware(sessionService);
+        return new SessionMiddleware(sessionService, errorHandling);
     }
 
     @Bean
