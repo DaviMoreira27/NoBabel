@@ -10,7 +10,7 @@ import org.hibernate.SessionException;
 import org.hibernate.annotations.Filter;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController()
 public class TestController {
     @GetMapping("/test")
     @Operation(summary = "Get Test String", description = "Retorna uma string simples de teste.")

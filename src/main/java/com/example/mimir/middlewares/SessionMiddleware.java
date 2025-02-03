@@ -2,11 +2,13 @@ package com.example.mimir.middlewares;
 
 import com.example.mimir.common.ErrorHandlingFilters;
 import com.example.mimir.entities.Session;
+import com.example.mimir.exceptions.DatabaseException;
 import com.example.mimir.exceptions.SessionException;
 import com.example.mimir.services.SessionService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,21 +27,62 @@ public class SessionMiddleware implements Filter {
         this.errorHandling = errorHandlingFilters;
     }
 
+    private Cookie setSession (HttpServletRequest httpRequest) throws DatabaseException {
+        String ipAddress = httpRequest.getHeader("X-FORWARDED-FOR");
+        if (ipAddress == null) {
+            ipAddress = httpRequest.getRemoteAddr();
+        }
+
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String sessionId = this.sessionService.setSessionData(false, ipAddress, userAgent, null);
+
+        return new Cookie("JSESSIONID", sessionId);
+    }
+
+    private void getSessionData (String sessionId, HttpServletRequest httpRequest) throws SessionException {
+        Session sessionData = this.sessionService.getSession(sessionId);
+
+        System.out.println("SESSION DATA" + sessionData.getSessionData());
+
+        if (sessionData.getSessionData() == null) {
+            this.setSession(httpRequest);
+            return;
+        }
+
+        if (this.checkIfSessionIsValid(sessionData) && sessionData.getSessionData().isLogged()) {
+            throw new SessionException.SessionExpiredException("Session already expired, please " +
+                    "make a new login");
+        }
+
+        if (checkIfSessionIsValid(sessionData)) {
+            this.setSession(httpRequest);
+        }
+    }
+
+    private boolean checkIfSessionIsValid (Session sessionData) {
+        return sessionData.getSessionData().isExpired() &&
+                sessionData.getSessionData().expirationTime() >= System.currentTimeMillis() &&
+                sessionData.getSessionData().sessionMaxIdleTime() >= sessionData.getSessionData().lastRequestTime();
+    }
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
                          FilterChain filterChain) throws ServletException, IOException {
         try {
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+
             Cookie[] cookies = httpRequest.getCookies();
-            System.out.println("MIDDLEWARE");
             if (cookies == null || cookies.length == 0) {
-                throw new SessionException.InvalidSessionException("No cookies found");
+                Cookie sessionCookie = this.setSession(httpRequest);
+                httpResponse.addCookie(sessionCookie);
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
             }
 
             for (Cookie cookie : cookies) {
-                System.out.println(cookie.getName() + " : " + cookie.getValue());
                 if (cookie.getName().equals("JSESSIONID")) {
-                    this.getSessionData(cookie.getValue());
+                    this.getSessionData(cookie.getValue(), httpRequest);
                     filterChain.doFilter(servletRequest, servletResponse);
                     return;
                 }
@@ -48,23 +91,6 @@ public class SessionMiddleware implements Filter {
         } catch (SessionException error) {
             this.errorHandling.filterError(error, servletResponse);
         }
-    }
-
-    private void getSessionData (String sessionId) throws SessionException {
-       Session sessionData = this.sessionService.getSession(sessionId);
-       System.out.println(sessionData);
-
-       if (sessionData == null) {
-           throw new SessionException.InvalidSessionException("No session found");
-       }
-
-       if (
-               sessionData.getSessionData().isExpired() ||
-               sessionData.getSessionData().expirationTime() >= System.currentTimeMillis() ||
-               sessionData.getSessionData().sessionMaxIdleTime() >= sessionData.getSessionData().lastRequestTime()
-       ) {
-           throw new SessionException.SessionExpiredException("Session already expired");
-       }
     }
 }
 

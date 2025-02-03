@@ -16,15 +16,21 @@ package com.example.mimir.dto;
   The `SessionData` in your example would be defined as:
 */
 
+import org.springframework.data.redis.core.RedisHash;
+
+import javax.annotation.Nullable;
+
+@RedisHash
 public record SessionData(
-        String email,
+        @Nullable String email,
         long expirationTime,
         long sessionStartTime,
         long sessionMaxIdleTime,
         boolean isExpired,
         String userAgent,
         String ipAddress,
-        long lastRequestTime
+        long lastRequestTime,
+        boolean isLogged
 ) {
     /*
       The record `SessionData` is a class that can hold data. However, in this example, no fields are declared inside the parentheses.
