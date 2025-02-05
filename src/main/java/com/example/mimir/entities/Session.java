@@ -12,11 +12,11 @@ public class Session {
     private SessionData sessionData;
 
     // Getters and Setters
-    public String getUserId() {
+    public String getSessionId() {
         return sessionId;
     }
 
-    public void setUserId(String sessionId) {
+    public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
 

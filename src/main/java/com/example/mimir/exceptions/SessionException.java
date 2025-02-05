@@ -24,4 +24,11 @@ public abstract class SessionException extends HttpClientException {
         }
     }
 
+    public static class NoCookiesFound extends SessionException {
+        public static HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        public NoCookiesFound(String message) {
+            super(message, "SESSION_EXPIRED", httpStatus);
+        }
+    }
+
 }

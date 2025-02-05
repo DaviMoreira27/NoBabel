@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController()
 public class TestController {
-    @GetMapping("/test")
+    @GetMapping("/api/test")
     @Operation(summary = "Get Test String", description = "Retorna uma string simples de teste.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Requisição bem-sucedida"),
